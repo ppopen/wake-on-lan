@@ -58,7 +58,7 @@ wake_by_mac() {
     
     if [[ -z "$mac" ]]; then
         echo -e "${RED}Error: MAC address required${NC}"
-        echo "Usage: wol.sh wake <MAC address> [broadcast IP]"
+        echo "Usage: wol.sh wake <MAC address> [broadcast IP] [ping IP]"
         exit 1
     fi
     
@@ -147,6 +147,9 @@ for i, d in enumerate(devices, 1):
     print(f'  {i}. {name}')
     print(f'     MAC: {mac}')
     print(f'     Broadcast: {broadcast}')
+    ip = d.get('ip', '')
+    if ip:
+        print(f'     IP: {ip}')
     print()
 "
 }
@@ -156,10 +159,11 @@ add_device() {
     local name="$1"
     local mac="$2"
     local broadcast="${3:-255.255.255.255}"
+    local ip="${4:-}"
     
     if [[ -z "$name" || -z "$mac" ]]; then
         echo -e "${RED}Error: Name and MAC address required${NC}"
-        echo "Usage: wol.sh add <name> <MAC> [broadcast IP]"
+        echo "Usage: wol.sh add <name> <MAC> [broadcast IP] [ping IP]"
         exit 1
     fi
     
@@ -208,7 +212,8 @@ import json
 device = {
     'name': '$name',
     'mac': '$mac',
-    'broadcast': '$broadcast'
+    'broadcast': '$broadcast',
+    'ip': '$ip'
 }
 print(json.dumps(device))
 ")
@@ -223,6 +228,9 @@ print(json.dumps(devices, indent=2))
 " > "$CONFIG_FILE"
     
     echo -e "${GREEN}Device '${name}' added successfully!${NC}"
+    if [[ -n "$ip" ]]; then
+        echo "  IP for ping: $ip"
+    fi
     echo "  MAC: $mac"
     echo "  Broadcast: $broadcast"
 }
@@ -297,7 +305,7 @@ query_status() {
     
     if [[ -z "$ip" ]]; then
         echo -e "${YELLOW}Warning: No IP configured for '${name}'${NC}"
-        echo "Use 'wol.sh update-ip <name> <IP>' to set an IP address"
+        echo "Use 'wol.sh add <name> <MAC> <broadcast> <IP>' to set an IP address"
         exit 1
     fi
     

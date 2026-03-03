@@ -26,10 +26,11 @@ commands:
       - "list"
   add_device:
     description: Add a new device to the config
-    usage: "add <name> <MAC address> [broadcast IP]"
+    usage: "add <name> <MAC address> [broadcast IP] [ping IP]"
     examples:
       - "add desktop 00:11:22:33:44:55"
       - "add server 00:11:22:33:44:55 192.168.1.255"
+      - "add server 00:11:22:33:44:55 192.168.1.255 192.168.1.100"
   remove_device:
     description: Remove a device from config
     usage: "remove <device name>"

@@ -44,7 +44,9 @@ list
 ```
 add desktop 00:11:22:33:44:55
 add server AA:BB:CC:DD:EE:FF 192.168.1.255
+add desktop 00:11:22:33:44:55 192.168.1.255 192.168.1.100
 ```
+The fourth parameter is the IP address used for the status/ping check.
 
 ### Remove a device
 ```
@@ -70,12 +72,14 @@ Devices are stored in JSON format:
   {
     "name": "desktop",
     "mac": "00:11:22:33:44:55",
-    "broadcast": "192.168.1.255"
+    "broadcast": "192.168.1.255",
+    "ip": "192.168.1.100"
   },
   {
     "name": "server",
     "mac": "AA:BB:CC:DD:EE:FF",
-    "broadcast": "192.168.1.255"
+    "broadcast": "192.168.1.255",
+    "ip": "192.168.1.200"
   }
 ]
 ```
