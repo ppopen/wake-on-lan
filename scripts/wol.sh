@@ -77,13 +77,15 @@ get_device_by_name() {
     python3 -c "
 import json
 import sys
-devices = json.load(open('$CONFIG_FILE'))
+name = sys.argv[1]
+config_file = sys.argv[2]
+devices = json.load(open(config_file))
 for d in devices:
-    if d.get('name', '').lower() == '$name'.lower():
+    if d.get('name', '').lower() == name.lower():
         print(json.dumps(d))
         sys.exit(0)
 sys.exit(1)
-" 2>/dev/null
+" "$name" "$CONFIG_FILE" 2>/dev/null
 }
 
 # Wake a device by name
@@ -185,13 +187,14 @@ add_device() {
     existing=$(echo "$devices" | python3 -c "
 import json
 import sys
+name = sys.argv[1]
 devices = json.load(sys.stdin)
 for d in devices:
-    if d.get('name', '').lower() == '$name'.lower():
+    if d.get('name', '').lower() == name.lower():
         print('yes')
         sys.exit(0)
 print('no')
-" 2>/dev/null)
+" "$name" 2>/dev/null)
     
     if [[ "$existing" == "yes" ]]; then
         echo -e "${YELLOW}Warning: Device '${name}' already exists. Updating...${NC}"
@@ -199,33 +202,40 @@ print('no')
         devices=$(echo "$devices" | python3 -c "
 import json
 import sys
+name = sys.argv[1]
 devices = json.load(sys.stdin)
-devices = [d for d in devices if d.get('name', '').lower() != '$name'.lower()]
+devices = [d for d in devices if d.get('name', '').lower() != name.lower()]
 print(json.dumps(devices))
-")
+" "$name")
     fi
     
     # Add new device
     local new_device
     new_device=$(python3 -c "
 import json
+import sys
+name = sys.argv[1]
+mac = sys.argv[2]
+broadcast = sys.argv[3]
+ip = sys.argv[4] if len(sys.argv) > 4 else ''
 device = {
-    'name': '$name',
-    'mac': '$mac',
-    'broadcast': '$broadcast',
-    'ip': '$ip'
+    'name': name,
+    'mac': mac,
+    'broadcast': broadcast,
+    'ip': ip
 }
 print(json.dumps(device))
-")
+" "$name" "$mac" "$broadcast" "$ip")
     
     # Merge and save
     echo "$devices" | python3 -c "
 import json
 import sys
+new_device = json.loads(sys.argv[1])
 devices = json.load(sys.stdin)
-devices.append($new_device)
+devices.append(new_device)
 print(json.dumps(devices, indent=2))
-" > "$CONFIG_FILE"
+" "$new_device" > "$CONFIG_FILE"
     
     echo -e "${GREEN}Device '${name}' added successfully!${NC}"
     if [[ -n "$ip" ]]; then
@@ -255,13 +265,14 @@ remove_device() {
     exists=$(echo "$devices" | python3 -c "
 import json
 import sys
+name = sys.argv[1]
 devices = json.load(sys.stdin)
 for d in devices:
-    if d.get('name', '').lower() == '$name'.lower():
+    if d.get('name', '').lower() == name.lower():
         print('yes')
         sys.exit(0)
 print('no')
-" 2>/dev/null)
+" "$name" 2>/dev/null)
     
     if [[ "$exists" == "no" ]]; then
         echo -e "${RED}Error: Device '${name}' not found in config${NC}"
@@ -272,10 +283,11 @@ print('no')
     echo "$devices" | python3 -c "
 import json
 import sys
+name = sys.argv[1]
 devices = json.load(sys.stdin)
-devices = [d for d in devices if d.get('name', '').lower() != '$name'.lower()]
+devices = [d for d in devices if d.get('name', '').lower() != name.lower()]
 print(json.dumps(devices, indent=2))
-" > "$CONFIG_FILE"
+" "$name" > "$CONFIG_FILE"
     
     echo -e "${GREEN}Device '${name}' removed successfully!${NC}"
 }
